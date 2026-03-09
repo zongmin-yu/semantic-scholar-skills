@@ -21,7 +21,6 @@ from .requests import (
     RequestModel,
     SnippetSearchRequest,
 )
-from .transport import MakeRequestCompatTransport, default_transport
 
 
 class SupportsRequestJson(Protocol):
@@ -186,8 +185,12 @@ class S2Client:
 
 
 def get_default_client() -> S2Client:
+    from .transport import default_transport
+
     return S2Client(default_transport)
 
 
 def make_compat_client(make_request_callable) -> S2Client:
+    from .transport import MakeRequestCompatTransport
+
     return S2Client(MakeRequestCompatTransport(make_request_callable))
