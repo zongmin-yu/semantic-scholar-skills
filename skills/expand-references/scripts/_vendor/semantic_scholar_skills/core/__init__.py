@@ -1,0 +1,58 @@
+"""Minimal core exports for vendored standalone skills."""
+
+from .client import S2Client, SupportsRequestJson
+from .exceptions import (
+    S2ApiError,
+    S2Error,
+    S2NotFoundError,
+    S2RateLimitError,
+    S2TimeoutError,
+    S2ValidationError,
+)
+from .requests import (
+    AuthorBatchDetailsRequest,
+    AuthorDetailsRequest,
+    AuthorPapersRequest,
+    AuthorSearchRequest,
+    PaperAutocompleteRequest,
+    PaperAuthorsRequest,
+    PaperBatchDetailsRequest,
+    PaperBulkSearchRequest,
+    PaperCitationsRequest,
+    PaperDetailsRequest,
+    PaperRecommendationsMultiRequest,
+    PaperRecommendationsSingleRequest,
+    PaperReferencesRequest,
+    PaperRelevanceSearchRequest,
+    PaperTitleSearchRequest,
+    RequestModel,
+    SnippetSearchRequest,
+)
+
+__all__ = [
+    "AuthorBatchDetailsRequest",
+    "AuthorDetailsRequest",
+    "AuthorPapersRequest",
+    "AuthorSearchRequest",
+    "PaperAutocompleteRequest",
+    "PaperAuthorsRequest",
+    "PaperBatchDetailsRequest",
+    "PaperBulkSearchRequest",
+    "PaperCitationsRequest",
+    "PaperDetailsRequest",
+    "PaperRecommendationsMultiRequest",
+    "PaperRecommendationsSingleRequest",
+    "PaperReferencesRequest",
+    "PaperRelevanceSearchRequest",
+    "PaperTitleSearchRequest",
+    "RequestModel",
+    "S2ApiError",
+    "S2Client",
+    "S2Error",
+    "S2NotFoundError",
+    "S2RateLimitError",
+    "S2TimeoutError",
+    "S2ValidationError",
+    "SnippetSearchRequest",
+    "SupportsRequestJson",
+]
