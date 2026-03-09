@@ -120,6 +120,11 @@ async def trace_citations(
         edge
         for edge in reference_edges
         if edge.score >= 0.45
+        and (
+            focal_year is None
+            or edge.paper.year is None
+            or edge.paper.year < focal_year
+        )
     ]
     foundations.sort(
         key=lambda item: (

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib
 import pytest
 
 from semantic_scholar_skills.core import PaperCitationsRequest, PaperReferencesRequest, S2ValidationError
@@ -30,7 +31,8 @@ def patch_resolve_paper(monkeypatch, focal_resolved: ResolvedPaper) -> None:
     async def fake_resolve_paper(client, query, **kwargs):
         return focal_resolved
 
-    monkeypatch.setattr("semantic_scholar_skills.engine.trace_citations.resolve_paper", fake_resolve_paper)
+    trace_module = importlib.import_module("semantic_scholar_skills.engine.trace_citations")
+    monkeypatch.setattr(trace_module, "resolve_paper", fake_resolve_paper)
 
 
 @pytest.mark.asyncio
@@ -167,13 +169,14 @@ async def test_trace_citations_populates_bridge_nodes_from_mid_confidence_edges(
                     "paperId": "p-bridge",
                     "title": "Bridge Paper",
                     "year": 2018,
-                    "citationCount": 1500,
-                    "influentialCitationCount": 150,
+                    "citationCount": 5000,
+                    "influentialCitationCount": 500,
                     "contexts": [
-                        "This work compares transformer models to sequence models with extensive detail.",
-                        "It provides a second explanatory context about methodological bridging.",
+                        "This work compares transformer architectures to sequence models with extensive methodological detail.",
+                        "It provides a second explanatory context about connecting otherwise separate citation neighborhoods.",
+                        "A third rich context adds more evidence for bridge-like usage.",
                     ],
-                    "intents": ["Compare"],
+                    "intents": ["Background", "Compare"],
                     "isInfluential": False,
                 }
             ]
