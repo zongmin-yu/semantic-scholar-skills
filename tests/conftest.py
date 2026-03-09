@@ -9,8 +9,9 @@ from typing import Any
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
+SRC = ROOT / "src"
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
 
 from semantic_scholar_skills.config import Config, ErrorType
 from semantic_scholar_skills.core import transport as transport_module

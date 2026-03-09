@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "semantic-scholar-skills"
+version = "0.1.0"
+description = "Semantic Scholar core client plus MCP adapters and HTTP bridge."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [
+  { name = "Yuzongmin Yu" },
+]
+dependencies = [
+  "httpx>=0.24.0",
+  "python-dotenv>=1.0.0",
+  "fastmcp>=2.0.0,<3.0.0",
+  "fastapi>=0.115.0",
+  "uvicorn>=0.32.0",
+]
+
+[project.optional-dependencies]
+test = [
+  "pytest>=7.3.1",
+  "pytest-asyncio>=0.21.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/zongmin-yu/semantic-scholar-skills"
+Repository = "https://github.com/zongmin-yu/semantic-scholar-skills"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+  "live: calls the real Semantic Scholar API",
+]
+asyncio_mode = "auto"
