@@ -131,6 +131,31 @@ async def test_stdlib_transport_uses_recommendations_base_url_for_post_requests(
 
 
 @pytest.mark.asyncio
+async def test_stdlib_transport_preserves_query_params_on_post_requests(
+    fake_opener_queue,
+    recorded_sleep,
+    fixed_clock,
+) -> None:
+    fake_opener_queue.queue(FakeResponse(payload={"recommendedPapers": []}))
+    transport = StdlibTransport(opener=fake_opener_queue, sleeper=recorded_sleep, clock=fixed_clock)
+
+    result = await transport.request_json(
+        "/papers",
+        params={"limit": 5, "fields": "title,year"},
+        method="POST",
+        json={"positivePaperIds": ["p1"]},
+        base_url=Config.RECOMMENDATIONS_BASE_URL,
+    )
+
+    assert result == {"recommendedPapers": []}
+    assert fake_opener_queue.calls[0]["url"] == (
+        f"{Config.RECOMMENDATIONS_BASE_URL}/papers?limit=5&fields=title%2Cyear"
+    )
+    assert fake_opener_queue.calls[0]["method"] == "POST"
+    assert fake_opener_queue.calls[0]["data"] == b'{"positivePaperIds": ["p1"]}'
+
+
+@pytest.mark.asyncio
 async def test_stdlib_transport_prefers_api_key_override_over_environment(
     monkeypatch,
     fake_opener_queue,

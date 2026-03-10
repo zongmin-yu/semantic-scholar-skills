@@ -240,16 +240,16 @@ class StdlibTransport:
             url = f"{base_url or Config.BASE_URL}{endpoint}"
 
         encoded_params = urllib.parse.urlencode(params or {}, doseq=False)
+        if encoded_params:
+            joiner = "&" if "?" in url else "?"
+            url = f"{url}{joiner}{encoded_params}"
+
         body: bytes | None = None
         headers = {"User-Agent": USER_AGENT}
         if api_key:
             headers["x-api-key"] = api_key
 
-        if method == "GET":
-            if encoded_params:
-                joiner = "&" if "?" in url else "?"
-                url = f"{url}{joiner}{encoded_params}"
-        elif json_body is not None:
+        if method != "GET" and json_body is not None:
             body = json.dumps(json_body).encode("utf-8")
             headers["Content-Type"] = "application/json"
 
