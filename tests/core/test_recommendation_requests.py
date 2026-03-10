@@ -68,6 +68,28 @@ def test_paper_recommendations_single_limit_validation() -> None:
     )
 
 
+def test_paper_recommendations_single_requires_non_blank_paper_id() -> None:
+    with pytest.raises(S2ValidationError) as excinfo:
+        PaperRecommendationsSingleRequest(paper_id="   ")
+
+    assert_validation_error(excinfo, "Paper ID cannot be empty", field="paper_id")
+
+
+def test_paper_recommendations_single_limit_must_be_at_least_one() -> None:
+    with pytest.raises(S2ValidationError) as excinfo:
+        PaperRecommendationsSingleRequest(
+            paper_id="204e3073870fae3d05bcbc2f6a8e263d9b72e776",
+            limit=0,
+        )
+
+    assert_validation_error(
+        excinfo,
+        "Limit must be at least 1",
+        field="limit",
+        details={"min_limit": 1},
+    )
+
+
 def test_paper_recommendations_multi_serializes_json_and_base_url() -> None:
     request = PaperRecommendationsMultiRequest(
         positive_paper_ids=["p1", "p2"],
@@ -106,4 +128,16 @@ def test_paper_recommendations_multi_limit_validation() -> None:
         "Cannot request more than 500 recommendations",
         field="limit",
         details={"max_limit": 500, "requested": 501},
+    )
+
+
+def test_paper_recommendations_multi_limit_must_be_at_least_one() -> None:
+    with pytest.raises(S2ValidationError) as excinfo:
+        PaperRecommendationsMultiRequest(positive_paper_ids=["p1"], limit=0)
+
+    assert_validation_error(
+        excinfo,
+        "Limit must be at least 1",
+        field="limit",
+        details={"min_limit": 1},
     )

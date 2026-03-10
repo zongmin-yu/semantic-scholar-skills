@@ -80,6 +80,18 @@ def test_paper_relevance_search_empty_query_raises() -> None:
     assert_validation_error(excinfo, "Query string cannot be empty", field="query")
 
 
+def test_paper_relevance_search_limit_must_be_at_least_one() -> None:
+    with pytest.raises(S2ValidationError) as excinfo:
+        PaperRelevanceSearchRequest(query="attention", limit=0)
+
+    assert_validation_error(
+        excinfo,
+        "Limit must be at least 1",
+        field="limit",
+        details={"min_limit": 1},
+    )
+
+
 def test_paper_bulk_search_serializes_all_filters() -> None:
     request = PaperBulkSearchRequest(
         query=" transformer ",
@@ -152,6 +164,20 @@ def test_paper_title_search_empty_query_raises() -> None:
         PaperTitleSearchRequest(query="   ")
 
     assert_validation_error(excinfo, "Query string cannot be empty", field="query")
+
+
+def test_paper_title_search_negative_min_citation_count_raises() -> None:
+    with pytest.raises(S2ValidationError) as excinfo:
+        PaperTitleSearchRequest(
+            query="Attention Is All You Need",
+            min_citation_count=-1,
+        )
+
+    assert_validation_error(
+        excinfo,
+        "Minimum citation count cannot be negative",
+        field="min_citation_count",
+    )
 
 
 def test_paper_details_serializes_fields() -> None:

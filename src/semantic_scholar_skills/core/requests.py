@@ -63,6 +63,22 @@ def _quote_path_identifier(identifier: str) -> str:
     return quote(identifier, safe=":")
 
 
+def _validate_positive_limit(limit: int, *, maximum: int | None = None) -> None:
+    if limit < 1:
+        _raise_validation("Limit must be at least 1", {"min_limit": 1}, field="limit")
+    if maximum is not None and limit > maximum:
+        _raise_validation(
+            f"Cannot request more than {maximum} recommendations",
+            {"max_limit": maximum, "requested": limit},
+            field="limit",
+        )
+
+
+def _validate_non_negative_min_citation_count(min_citation_count: int | None) -> None:
+    if min_citation_count is not None and min_citation_count < 0:
+        _raise_validation("Minimum citation count cannot be negative", field="min_citation_count")
+
+
 @dataclass(slots=True)
 class PaperRelevanceSearchRequest(RequestModel):
     query: str
@@ -87,6 +103,8 @@ class PaperRelevanceSearchRequest(RequestModel):
             self.fields = list(PaperFields.DEFAULT)
         else:
             _validate_fields(self.fields, PaperFields.VALID_FIELDS)
+        _validate_positive_limit(self.limit)
+        _validate_non_negative_min_citation_count(self.min_citation_count)
         self.limit = min(self.limit, 100)
 
     def to_params(self) -> dict[str, Any]:
@@ -216,6 +234,7 @@ class PaperTitleSearchRequest(RequestModel):
             self.fields = list(PaperFields.DEFAULT)
         else:
             _validate_fields(self.fields, PaperFields.VALID_FIELDS)
+        _validate_non_negative_min_citation_count(self.min_citation_count)
 
     def to_params(self) -> dict[str, Any]:
         params = {"query": self.query, "fields": ",".join(self.fields or [])}
@@ -554,12 +573,9 @@ class PaperRecommendationsSingleRequest(RequestModel):
         return f"/papers/forpaper/{self.paper_id}"
 
     def __post_init__(self) -> None:
-        if self.limit > 500:
-            _raise_validation(
-                "Cannot request more than 500 recommendations",
-                {"max_limit": 500, "requested": self.limit},
-                field="limit",
-            )
+        if not self.paper_id.strip():
+            _raise_validation("Paper ID cannot be empty", field="paper_id")
+        _validate_positive_limit(self.limit, maximum=500)
         if self.from_pool not in VALID_RECOMMENDATION_POOLS:
             _raise_validation(
                 "Invalid paper pool specified",
@@ -590,12 +606,7 @@ class PaperRecommendationsMultiRequest(RequestModel):
     def __post_init__(self) -> None:
         if not self.positive_paper_ids:
             _raise_validation("Must provide at least one positive paper ID", field="positive_paper_ids")
-        if self.limit > 500:
-            _raise_validation(
-                "Cannot request more than 500 recommendations",
-                {"max_limit": 500, "requested": self.limit},
-                field="limit",
-            )
+        _validate_positive_limit(self.limit, maximum=500)
 
     def to_params(self) -> dict[str, Any]:
         params = {"limit": self.limit}
