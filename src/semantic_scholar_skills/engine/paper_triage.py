@@ -174,7 +174,7 @@ async def paper_triage(
         seen_ids.add(paper_id)
 
     hydrate_ids = [candidate["paperId"] for candidate in deduped if _needs_hydration(candidate)]
-    hydrated_by_id: dict[str, dict[str, Any] | None] = {}
+    hydrated_by_id: dict[str, dict[str, Any]] = {}
     for index in range(0, len(hydrate_ids), min(Config.MAX_BATCH_SIZE, 500)):
         chunk = hydrate_ids[index : index + min(Config.MAX_BATCH_SIZE, 500)]
         hydrated = await client.batch_papers(
@@ -184,8 +184,13 @@ async def paper_triage(
             ),
             api_key_override=api_key_override,
         )
-        for paper_id, payload in zip(chunk, hydrated):
-            hydrated_by_id[paper_id] = payload
+        for payload in hydrated:
+            if not isinstance(payload, dict):
+                continue
+            paper_id = payload.get("paperId")
+            if not paper_id:
+                continue
+            hydrated_by_id[str(paper_id)] = payload
 
     materialized: list[dict[str, Any]] = []
     for candidate in deduped:

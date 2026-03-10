@@ -223,6 +223,63 @@ async def test_paper_triage_hydrates_autocomplete_and_search_candidates_with_bat
 
 
 @pytest.mark.asyncio
+async def test_paper_triage_matches_hydrated_records_by_paper_id_when_batch_response_is_out_of_order(
+    stub_s2_client,
+) -> None:
+    stub_s2_client.queue(
+        "match_paper_title",
+        {
+            "paperId": "p-bert",
+            "title": "BERT: Pre-training of Deep Bidirectional Transformers",
+            "year": 2019,
+            "citationCount": 90000,
+        },
+    )
+    stub_s2_client.queue(
+        "autocomplete_papers",
+        {
+            "matches": [
+                {
+                    "paperId": "p-roberta",
+                    "title": "RoBERTa: A Robustly Optimized BERT Pretraining Approach",
+                }
+            ]
+        },
+    )
+    stub_s2_client.queue("search_papers", {"data": []})
+    stub_s2_client.queue("bulk_search_papers", {"data": []})
+    stub_s2_client.queue(
+        "batch_papers",
+        [
+            {
+                "paperId": "p-roberta",
+                "title": "RoBERTa: A Robustly Optimized BERT Pretraining Approach",
+                "abstract": "A robust BERT pretraining approach.",
+                "year": 2019,
+                "citationCount": 30000,
+                "influentialCitationCount": 2000,
+                "authors": [{"authorId": "a2", "name": "Yinhan Liu"}],
+            },
+            {
+                "paperId": "p-bert",
+                "title": "BERT: Pre-training of Deep Bidirectional Transformers",
+                "abstract": "A bidirectional transformer pre-training objective.",
+                "year": 2019,
+                "citationCount": 90000,
+                "influentialCitationCount": 5000,
+                "authors": [{"authorId": "a1", "name": "Jacob Devlin"}],
+            },
+        ],
+    )
+
+    result = await paper_triage(stub_s2_client, "bert bidirectional transformer", snippet_candidate_limit=0)
+
+    assert result.possible_interpretations[0].paper.paper_id == "p-bert"
+    assert result.possible_interpretations[1].paper.paper_id == "p-roberta"
+    assert result.shortlist[0].paper.paper_id == "p-bert"
+
+
+@pytest.mark.asyncio
 async def test_paper_triage_runs_snippet_search_only_for_top_preliminary_candidates(
     stub_s2_client,
     title_match_payload,

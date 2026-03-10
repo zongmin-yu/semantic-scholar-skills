@@ -202,6 +202,56 @@ async def test_expand_references_hydrates_recommendation_candidates_with_batch_p
 
 
 @pytest.mark.asyncio
+async def test_expand_references_matches_hydrated_candidates_by_paper_id_when_batch_response_is_out_of_order(
+    stub_s2_client,
+    resolved_positive_seed_records,
+) -> None:
+    queue_seed_resolution(stub_s2_client, *resolved_positive_seed_records)
+    stub_s2_client.queue(
+        "recommend_from_papers",
+        {
+            "recommendedPapers": [
+                {"paperId": "p-strong", "title": "Strong Candidate"},
+                {"paperId": "p-weak", "title": "Weak Candidate"},
+            ]
+        },
+    )
+    stub_s2_client.queue(
+        "batch_papers",
+        [
+            {
+                "paperId": "p-weak",
+                "title": "Weak Candidate",
+                "abstract": "Weak candidate abstract.",
+                "year": 2022,
+                "venue": "Workshop",
+                "authors": [{"authorId": "w1", "name": "Weak Author"}],
+                "citationCount": 5,
+                "influentialCitationCount": 0,
+                "fieldsOfStudy": ["Computer Science"],
+                "publicationTypes": ["Conference"],
+            },
+            {
+                "paperId": "p-strong",
+                "title": "Strong Candidate",
+                "abstract": "Strong candidate abstract.",
+                "year": 2018,
+                "venue": "ACL",
+                "authors": [{"authorId": "s1", "name": "Strong Author"}],
+                "citationCount": 5000,
+                "influentialCitationCount": 400,
+                "fieldsOfStudy": ["Computer Science", "Information Retrieval"],
+                "publicationTypes": ["Conference"],
+            },
+        ],
+    )
+
+    result = await expand_references(stub_s2_client, ["seed one", "seed two"])
+
+    assert result.closest_neighbors[0].paper.paper_id == "p-strong"
+
+
+@pytest.mark.asyncio
 async def test_expand_references_assigns_foundational_recent_methodological_and_survey_categories(
     stub_s2_client,
     resolved_positive_seed_records,

@@ -182,6 +182,47 @@ async def test_resolve_paper_falls_back_to_autocomplete_and_batch_hydration_on_t
 
 
 @pytest.mark.asyncio
+async def test_resolve_paper_preserves_autocomplete_order_when_batch_hydration_is_out_of_order(
+    stub_s2_client,
+) -> None:
+    stub_s2_client.queue(
+        "match_paper_title",
+        S2NotFoundError(message="not found", resource_type="paper", resource_id="first suggestion"),
+    )
+    stub_s2_client.queue(
+        "autocomplete_papers",
+        {
+            "matches": [
+                {"paperId": "p-first", "title": "First suggestion"},
+                {"paperId": "p-second", "title": "Second suggestion"},
+            ]
+        },
+    )
+    stub_s2_client.queue(
+        "batch_papers",
+        [
+            {
+                "paperId": "p-second",
+                "title": "Second suggestion",
+                "year": 2020,
+                "authors": [{"authorId": "a2", "name": "Author Two"}],
+            },
+            {
+                "paperId": "p-first",
+                "title": "First suggestion",
+                "year": 2021,
+                "authors": [{"authorId": "a1", "name": "Author One"}],
+            },
+        ],
+    )
+
+    resolved = await resolve_paper(stub_s2_client, "first suggestion")
+
+    assert resolved.paper.paper_id == "p-first"
+    assert tuple(paper.paper_id for paper in resolved.alternatives) == ("p-second",)
+
+
+@pytest.mark.asyncio
 async def test_resolve_paper_raises_not_found_when_autocomplete_has_no_matches(stub_s2_client) -> None:
     stub_s2_client.queue(
         "match_paper_title",

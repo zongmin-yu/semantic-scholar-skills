@@ -76,7 +76,7 @@ async def _hydrate_autocomplete_matches(
         return ()
 
     chunk_size = min(Config.MAX_BATCH_SIZE, 500)
-    hydrated: list[PaperSummary] = []
+    hydrated_by_id: dict[str, PaperSummary] = {}
     for index in range(0, len(deduped), chunk_size):
         chunk = deduped[index : index + chunk_size]
         response = await client.batch_papers(
@@ -84,9 +84,14 @@ async def _hydrate_autocomplete_matches(
             api_key_override=api_key_override,
         )
         for item in response:
-            if item:
-                hydrated.append(PaperSummary.from_api_response(item))
-    return tuple(hydrated)
+            if not isinstance(item, dict):
+                continue
+            paper_id = item.get("paperId")
+            if not paper_id:
+                continue
+            hydrated_by_id[str(paper_id)] = PaperSummary.from_api_response(item)
+
+    return tuple(hydrated_by_id[paper_id] for paper_id in deduped if paper_id in hydrated_by_id)
 
 
 async def resolve_paper(

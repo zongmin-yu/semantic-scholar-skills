@@ -114,7 +114,7 @@ async def _hydrate_candidates(
     api_key_override: str | None,
 ) -> list[dict[str, Any]]:
     candidate_by_id = {
-        candidate["paperId"]: dict(candidate)
+        str(candidate["paperId"]): dict(candidate)
         for candidate in candidates
         if candidate.get("paperId")
     }
@@ -129,9 +129,16 @@ async def _hydrate_candidates(
             PaperBatchDetailsRequest(paper_ids=chunk_ids, fields=RECOMMENDATION_FIELDS_CSV),
             api_key_override=api_key_override,
         )
-        for paper_id, hydrated in zip(chunk_ids, hydrated_chunk):
-            if hydrated is not None:
-                candidate_by_id[paper_id] = {**candidate_by_id[paper_id], **hydrated}
+        for hydrated in hydrated_chunk:
+            if not isinstance(hydrated, dict):
+                continue
+            paper_id = hydrated.get("paperId")
+            if not paper_id:
+                continue
+            paper_id = str(paper_id)
+            if paper_id not in candidate_by_id:
+                continue
+            candidate_by_id[paper_id] = {**candidate_by_id[paper_id], **hydrated}
     merged: list[dict[str, Any]] = []
     for paper_id in ids:
         candidate = candidate_by_id[paper_id]
