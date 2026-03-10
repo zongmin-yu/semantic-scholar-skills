@@ -171,6 +171,12 @@ def test_paper_details_empty_id_raises() -> None:
     assert_validation_error(excinfo, "Paper ID cannot be empty", field="paper_id")
 
 
+def test_paper_details_quotes_reserved_characters_in_path_identifiers() -> None:
+    request = PaperDetailsRequest(paper_id="DOI:10.1145/3292500.3330672")
+
+    assert request.endpoint == "/paper/DOI:10.1145%2F3292500.3330672"
+
+
 def test_paper_batch_details_posts_ids_json() -> None:
     request = PaperBatchDetailsRequest(
         paper_ids=["649def34f8be52c8b66281af98ae884c09aef38b", "ARXIV:2106.15928"],

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any, Optional
+from urllib.parse import quote
 
 from ..config import (
     AuthorDetailFields,
@@ -56,6 +57,10 @@ def _validate_csv_fields(fields: str, valid_fields: set[str]) -> None:
             {"valid_fields": list(valid_fields)},
             field="fields",
         )
+
+
+def _quote_path_identifier(identifier: str) -> str:
+    return quote(identifier, safe=":")
 
 
 @dataclass(slots=True)
@@ -236,7 +241,7 @@ class PaperDetailsRequest(RequestModel):
 
     @property
     def endpoint(self) -> str:
-        return f"/paper/{self.paper_id}"
+        return f"/paper/{_quote_path_identifier(self.paper_id)}"
 
     def __post_init__(self) -> None:
         if not self.paper_id.strip():

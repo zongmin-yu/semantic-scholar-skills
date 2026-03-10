@@ -37,7 +37,7 @@ async def test_resolve_paper_uses_get_paper_for_doi(stub_s2_client, sample_paper
         (
             "get_paper",
             PaperDetailsRequest(
-                paper_id="10.5555/3295222.3295349",
+                paper_id="DOI:10.5555/3295222.3295349",
                 fields=list(RESOLVE_FIELDS),
             ),
         )
@@ -73,7 +73,7 @@ async def test_resolve_paper_strips_doi_url_prefix_before_lookup(stub_s2_client,
     [(method_name, request)] = stub_s2_client.calls
     assert method_name == "get_paper"
     assert request == PaperDetailsRequest(
-        paper_id="10.1145/3292500.3330672",
+        paper_id="DOI:10.1145/3292500.3330672",
         fields=list(RESOLVE_FIELDS),
     )
 

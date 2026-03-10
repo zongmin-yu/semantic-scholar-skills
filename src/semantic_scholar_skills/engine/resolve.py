@@ -59,6 +59,12 @@ def _resolve_request_fields() -> list[str]:
     return list(RESOLVE_FIELDS)
 
 
+def _direct_lookup_identifier(match_type: Literal["doi", "paper_id"], normalized_query: str) -> str:
+    if match_type == "doi":
+        return f"DOI:{normalized_query}"
+    return normalized_query
+
+
 async def _hydrate_autocomplete_matches(
     client: S2Client,
     paper_ids: Sequence[str],
@@ -109,7 +115,10 @@ async def resolve_paper(
     match_type = detect_query_kind(normalized_query)
     if match_type in {"doi", "paper_id"}:
         record = await client.get_paper(
-            PaperDetailsRequest(paper_id=normalized_query, fields=_resolve_request_fields()),
+            PaperDetailsRequest(
+                paper_id=_direct_lookup_identifier(match_type, normalized_query),
+                fields=_resolve_request_fields(),
+            ),
             api_key_override=api_key_override,
         )
         return ResolvedPaper(
