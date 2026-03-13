@@ -9,10 +9,13 @@ from typing import Any
 import pytest
 
 from semantic_scholar_skills.core import S2Client, cleanup_client, get_default_client
+from semantic_scholar_skills.core.exceptions import S2RateLimitError
 
 
 _PLACEHOLDER_VALUES = {"", "none", "null", "false"}
 _LIVE_REQUEST_DELAY_SECONDS = 1.5
+_MAX_429_RETRIES = 3
+_429_BASE_WAIT = 5.0
 
 # Module-level timestamp shared across fixture instances so the throttle
 # carries over between tests (prevents 429 when tests run in sequence).
@@ -47,7 +50,16 @@ async def live_client(require_live_api_key: str) -> AsyncIterator[S2Client]:
             if delay > 0:
                 await asyncio.sleep(delay)
             _global_last_request_at = time.monotonic()
-            return await original_request_json(*args, **kwargs)
+
+            for attempt in range(_MAX_429_RETRIES + 1):
+                try:
+                    return await original_request_json(*args, **kwargs)
+                except S2RateLimitError:
+                    if attempt == _MAX_429_RETRIES:
+                        raise
+                    wait = _429_BASE_WAIT * (2 ** attempt)
+                    await asyncio.sleep(wait)
+                    _global_last_request_at = time.monotonic()
 
     transport.request_json = throttled_request_json
     try:
@@ -55,4 +67,3 @@ async def live_client(require_live_api_key: str) -> AsyncIterator[S2Client]:
     finally:
         transport.request_json = original_request_json
         await cleanup_client()
-
