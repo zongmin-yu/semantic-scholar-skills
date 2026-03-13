@@ -34,13 +34,18 @@ classifiers = [
 dependencies = [
   "httpx>=0.24.0",
   "python-dotenv>=1.0.0",
+]
+
+[project.optional-dependencies]
+mcp = [
   "fastmcp>=2.0.0,<3.0.0",
   "fastapi>=0.115.0",
   "uvicorn>=0.32.0",
 ]
-
-[project.optional-dependencies]
 test = [
+  "fastmcp>=2.0.0,<3.0.0",
+  "fastapi>=0.115.0",
+  "uvicorn>=0.32.0",
   "pytest>=7.3.1",
   "pytest-asyncio>=0.21.0",
 ]

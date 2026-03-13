@@ -42,6 +42,8 @@ Each skill is **fully self-contained** — no `pip install` required. The bundle
 pip install semantic-scholar-skills
 ```
 
+core library only: installs `core/`, `engine/`, and the stdlib-backed `standalone/` runtime.
+
 ```python
 import asyncio
 from semantic_scholar_skills.core import get_default_client, cleanup_client
@@ -62,9 +64,11 @@ asyncio.run(main())
 ### As an MCP server
 
 ```bash
-pip install semantic-scholar-skills
+pip install "semantic-scholar-skills[mcp]"
 semantic-scholar-skills-mcp
 ```
+
+full MCP stack: installs `fastmcp`, `fastapi`, and `uvicorn` in addition to the core library.
 
 16 tools covering papers, authors, citations, recommendations, and snippets. Works with Claude Desktop, Cursor, and any MCP client.
 
