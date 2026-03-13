@@ -1,0 +1,19 @@
+name: Live Smoke Tests
+
+on:
+  schedule:
+    - cron: '0 10 * * 1'  # Monday 10:00 UTC (after spec-audit at 09:00)
+  workflow_dispatch:
+
+jobs:
+  live-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -e '.[test]'
+      - run: pytest -m live -q --timeout=120
+        env:
+          SEMANTIC_SCHOLAR_API_KEY: ${{ secrets.SEMANTIC_SCHOLAR_API_KEY }}

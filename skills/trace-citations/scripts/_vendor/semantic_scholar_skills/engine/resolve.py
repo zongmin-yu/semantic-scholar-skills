@@ -143,8 +143,18 @@ async def resolve_paper(
     except S2Error:
         raise
 
-    if isinstance(title_match, dict) and title_match.get("paperId"):
-        primary_record = title_match
+    title_match_record: dict[str, object] | None = None
+    if isinstance(title_match, dict):
+        title_match_data = title_match.get("data")
+        if isinstance(title_match_data, list) and title_match_data:
+            first_match = title_match_data[0]
+            if isinstance(first_match, dict):
+                title_match_record = first_match
+        elif title_match.get("paperId"):
+            title_match_record = title_match
+
+    if isinstance(title_match_record, dict) and title_match_record.get("paperId"):
+        primary_record = title_match_record
         primary_source = "title_match"
         confidence = 0.95
         if not include_alternatives:
@@ -164,9 +174,9 @@ async def resolve_paper(
         )
         matches = autocomplete.get("matches", []) if isinstance(autocomplete, dict) else []
         autocomplete_ids = [
-            match.get("paperId")
+            str(match.get("id") or match.get("paperId"))
             for match in matches
-            if isinstance(match, dict) and match.get("paperId")
+            if isinstance(match, dict) and (match.get("id") or match.get("paperId"))
         ][:autocomplete_limit]
         hydrated = await _hydrate_autocomplete_matches(
             client,

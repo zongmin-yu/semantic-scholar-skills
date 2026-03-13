@@ -34,7 +34,7 @@ TRIAGE_PAPER_FIELDS: tuple[str, ...] = (
     "fieldsOfStudy",
     "publicationTypes",
 )
-SNIPPET_FIELDS: list[str] = ["snippet.text", "paper.title"]
+SNIPPET_FIELDS: list[str] = ["snippet.text"]
 
 
 def _needs_hydration(candidate: dict[str, Any]) -> bool:
@@ -141,18 +141,34 @@ async def paper_triage(
         )
         bulk_pages.extend(bulk_second_page.get("data", []))
 
+    title_match_record: dict[str, Any] | None = None
+    if isinstance(title_match_payload, dict):
+        title_match_data = title_match_payload.get("data")
+        if isinstance(title_match_data, list) and title_match_data:
+            first_match = title_match_data[0]
+            if isinstance(first_match, dict):
+                title_match_record = first_match
+        elif title_match_payload.get("paperId"):
+            title_match_record = title_match_payload
+
     ordered_candidates: list[dict[str, Any]] = []
-    if isinstance(title_match_payload, dict) and title_match_payload.get("paperId"):
-        ordered_candidates.append({"_source": "title_match", "_title_match": True, **title_match_payload})
+    if isinstance(title_match_record, dict) and title_match_record.get("paperId"):
+        ordered_candidates.append({"_source": "title_match", "_title_match": True, **title_match_record})
 
     for index, match in enumerate(autocomplete_payload.get("matches", []) if isinstance(autocomplete_payload, dict) else [], start=1):
-        if isinstance(match, dict) and match.get("paperId"):
+        paper_id = (
+            str(match.get("id") or match.get("paperId"))
+            if isinstance(match, dict) and (match.get("id") or match.get("paperId"))
+            else None
+        )
+        if isinstance(match, dict) and paper_id:
             ordered_candidates.append(
                 {
                     "_source": "autocomplete",
                     "_title_match": False,
                     "_autocomplete_rank": index,
                     **match,
+                    "paperId": paper_id,
                 }
             )
 
@@ -274,7 +290,7 @@ async def paper_triage(
     )
 
     possible_interpretations: list[ResolvedPaper] = []
-    if isinstance(title_match_payload, dict) and title_match_payload.get("paperId"):
+    if isinstance(title_match_record, dict) and title_match_record.get("paperId"):
         possible_interpretations.append(
             ResolvedPaper(
                 query=query,
@@ -282,7 +298,7 @@ async def paper_triage(
                 match_type="title",
                 source="title_match",
                 confidence=0.95,
-                paper=PaperSummary.from_api_response(title_match_payload),
+                paper=PaperSummary.from_api_response(title_match_record),
             )
         )
     for candidate in materialized:

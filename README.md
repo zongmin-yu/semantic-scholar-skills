@@ -8,8 +8,6 @@
 
 Three research workflows built on the Semantic Scholar API — available as a Python library, Claude Code skills, or a 16-tool MCP server.
 
-> **Status: Early Alpha.** The engine layer is under active development — response parsing is being validated against the live S2 API. The MCP server (16 tools) works today. Skill bundles and engine workflows will be fully functional soon. Contributions and bug reports welcome.
-
 ## Workflows
 
 ### `/expand-references` — Discover related work from seed papers
