@@ -29,6 +29,9 @@ RESOLVE_FIELDS: tuple[str, ...] = (
 DOI_URL_PREFIXES: tuple[str, ...] = ("https://doi.org/", "http://doi.org/", "doi:")
 HEX_PAPER_ID_RE = re.compile(r"^[0-9a-f]{40}$", re.IGNORECASE)
 CORPUS_ID_RE = re.compile(r"^CorpusId:\d+$", re.IGNORECASE)
+ARXIV_PREFIX_RE = re.compile(r"^arxiv:(.+)$", re.IGNORECASE)
+ARXIV_MODERN_ID_RE = re.compile(r"^\d{4}\.\d{4,5}(v\d+)?$")
+ARXIV_LEGACY_ID_RE = re.compile(r"^[a-z][a-z0-9-]+(?:\.[A-Z]{2})?/\d{7}(v\d+)?$", re.IGNORECASE)
 GENERIC_PREFIX_ID_RE = re.compile(r"^[A-Za-z][A-Za-z0-9_-]*:.+$")
 
 
@@ -41,6 +44,15 @@ def normalize_paper_query(query: str) -> str:
     return collapsed
 
 
+def _normalize_direct_paper_id(query: str) -> str:
+    arxiv_match = ARXIV_PREFIX_RE.match(query)
+    if arxiv_match:
+        return f"ARXIV:{arxiv_match.group(1)}"
+    if ARXIV_MODERN_ID_RE.match(query) or ARXIV_LEGACY_ID_RE.match(query):
+        return f"ARXIV:{query}"
+    return query
+
+
 def detect_query_kind(query: str) -> Literal["doi", "paper_id", "title"]:
     normalized = normalize_paper_query(query)
     lowered = normalized.lower()
@@ -49,6 +61,10 @@ def detect_query_kind(query: str) -> Literal["doi", "paper_id", "title"]:
     if HEX_PAPER_ID_RE.match(normalized):
         return "paper_id"
     if CORPUS_ID_RE.match(normalized):
+        return "paper_id"
+    if ARXIV_PREFIX_RE.match(normalized):
+        return "paper_id"
+    if ARXIV_MODERN_ID_RE.match(normalized) or ARXIV_LEGACY_ID_RE.match(normalized):
         return "paper_id"
     if " " not in normalized and GENERIC_PREFIX_ID_RE.match(normalized):
         return "paper_id"
@@ -62,7 +78,7 @@ def _resolve_request_fields() -> list[str]:
 def _direct_lookup_identifier(match_type: Literal["doi", "paper_id"], normalized_query: str) -> str:
     if match_type == "doi":
         return f"DOI:{normalized_query}"
-    return normalized_query
+    return _normalize_direct_paper_id(normalized_query)
 
 
 async def _hydrate_autocomplete_matches(

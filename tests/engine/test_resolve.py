@@ -18,10 +18,12 @@ from semantic_scholar_skills.engine.resolve import (
 )
 
 
-def test_detect_query_kind_classifies_doi_corpusid_prefixed_ids_and_title() -> None:
+def test_detect_query_kind_classifies_doi_corpusid_arxiv_ids_and_title() -> None:
     assert detect_query_kind("10.1145/3292500.3330672") == "doi"
     assert detect_query_kind("CorpusId:215416146") == "paper_id"
     assert detect_query_kind("ARXIV:2106.15928") == "paper_id"
+    assert detect_query_kind("2106.15928") == "paper_id"
+    assert detect_query_kind("hep-ph/9905221") == "paper_id"
     assert detect_query_kind("Attention Is All You Need") == "title"
 
 
@@ -75,6 +77,32 @@ async def test_resolve_paper_strips_doi_url_prefix_before_lookup(stub_s2_client,
     assert method_name == "get_paper"
     assert request == PaperDetailsRequest(
         paper_id="DOI:10.1145/3292500.3330672",
+        fields=list(RESOLVE_FIELDS),
+    )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("query", "expected_paper_id"),
+    [
+        ("2106.15928", "ARXIV:2106.15928"),
+        ("hep-ph/9905221", "ARXIV:hep-ph/9905221"),
+    ],
+)
+async def test_resolve_paper_normalizes_bare_arxiv_ids_before_direct_lookup(
+    stub_s2_client,
+    sample_paper_record,
+    query,
+    expected_paper_id,
+) -> None:
+    stub_s2_client.queue("get_paper", sample_paper_record)
+
+    await resolve_paper(stub_s2_client, query)
+
+    [(method_name, request)] = stub_s2_client.calls
+    assert method_name == "get_paper"
+    assert request == PaperDetailsRequest(
+        paper_id=expected_paper_id,
         fields=list(RESOLVE_FIELDS),
     )
 
