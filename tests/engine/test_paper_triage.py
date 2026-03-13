@@ -16,10 +16,14 @@ from semantic_scholar_skills.engine.paper_triage import SNIPPET_FIELDS, TRIAGE_P
 @pytest.fixture
 def title_match_payload() -> dict[str, object]:
     return {
-        "paperId": "p-bert",
-        "title": "BERT: Pre-training of Deep Bidirectional Transformers",
-        "year": 2019,
-        "citationCount": 90000,
+        "data": [
+            {
+                "paperId": "p-bert",
+                "title": "BERT: Pre-training of Deep Bidirectional Transformers",
+                "year": 2019,
+                "citationCount": 90000,
+            }
+        ]
     }
 
 
@@ -27,8 +31,8 @@ def title_match_payload() -> dict[str, object]:
 def autocomplete_payload() -> dict[str, object]:
     return {
         "matches": [
-            {"paperId": "p-bert", "title": "BERT: Pre-training of Deep Bidirectional Transformers"},
-            {"paperId": "p-roberta", "title": "RoBERTa: A Robustly Optimized BERT Pretraining Approach"},
+            {"id": "p-bert", "title": "BERT: Pre-training of Deep Bidirectional Transformers"},
+            {"id": "p-roberta", "title": "RoBERTa: A Robustly Optimized BERT Pretraining Approach"},
         ]
     }
 
@@ -229,10 +233,14 @@ async def test_paper_triage_matches_hydrated_records_by_paper_id_when_batch_resp
     stub_s2_client.queue(
         "match_paper_title",
         {
-            "paperId": "p-bert",
-            "title": "BERT: Pre-training of Deep Bidirectional Transformers",
-            "year": 2019,
-            "citationCount": 90000,
+            "data": [
+                {
+                    "paperId": "p-bert",
+                    "title": "BERT: Pre-training of Deep Bidirectional Transformers",
+                    "year": 2019,
+                    "citationCount": 90000,
+                }
+            ]
         },
     )
     stub_s2_client.queue(
@@ -240,7 +248,7 @@ async def test_paper_triage_matches_hydrated_records_by_paper_id_when_batch_resp
         {
             "matches": [
                 {
-                    "paperId": "p-roberta",
+                    "id": "p-roberta",
                     "title": "RoBERTa: A Robustly Optimized BERT Pretraining Approach",
                 }
             ]

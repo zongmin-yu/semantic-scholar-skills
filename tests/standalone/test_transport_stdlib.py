@@ -60,11 +60,12 @@ def fake_opener_queue() -> FakeOpenerQueue:
 
 
 @pytest.fixture
-def recorded_sleep():
+def recorded_sleep(fixed_clock):
     calls: list[float] = []
 
     async def fake_sleep(seconds: float) -> None:
         calls.append(seconds)
+        fixed_clock.advance(seconds)
 
     fake_sleep.calls = calls
     return fake_sleep
@@ -77,6 +78,10 @@ def fixed_clock():
     def clock() -> float:
         return current["value"]
 
+    def advance(seconds: float) -> None:
+        current["value"] += seconds
+
+    clock.advance = advance
     return clock
 
 
@@ -222,7 +227,7 @@ async def test_stdlib_transport_retries_transient_503_then_succeeds(
 
     assert result == {"ok": True}
     assert len(fake_opener_queue.calls) == 2
-    assert recorded_sleep.calls == [0.5]
+    assert recorded_sleep.calls == [0.5, 0.5]
 
 
 @pytest.mark.asyncio

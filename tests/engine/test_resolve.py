@@ -81,7 +81,7 @@ async def test_resolve_paper_strips_doi_url_prefix_before_lookup(stub_s2_client,
 
 @pytest.mark.asyncio
 async def test_resolve_paper_uses_title_match_before_autocomplete(stub_s2_client, sample_paper_record) -> None:
-    stub_s2_client.queue("match_paper_title", sample_paper_record)
+    stub_s2_client.queue("match_paper_title", {"data": [sample_paper_record]})
 
     resolved = await resolve_paper(
         stub_s2_client,
@@ -107,7 +107,7 @@ async def test_resolve_paper_returns_primary_title_match_when_autocomplete_enric
     stub_s2_client,
     sample_paper_record,
 ) -> None:
-    stub_s2_client.queue("match_paper_title", sample_paper_record)
+    stub_s2_client.queue("match_paper_title", {"data": [sample_paper_record]})
     stub_s2_client.queue("autocomplete_papers", S2ApiError(message="autocomplete unavailable"))
 
     resolved = await resolve_paper(stub_s2_client, "Attention Is All You Need")
@@ -126,7 +126,7 @@ async def test_resolve_paper_returns_primary_title_match_when_batch_hydration_fa
     sample_paper_record,
     sample_autocomplete_payload,
 ) -> None:
-    stub_s2_client.queue("match_paper_title", sample_paper_record)
+    stub_s2_client.queue("match_paper_title", {"data": [sample_paper_record]})
     stub_s2_client.queue("autocomplete_papers", sample_autocomplete_payload)
     stub_s2_client.queue("batch_papers", S2ApiError(message="batch unavailable"))
 
@@ -146,7 +146,7 @@ async def test_resolve_paper_collects_alternatives_from_autocomplete_when_reques
     sample_paper_record,
     sample_autocomplete_payload,
 ) -> None:
-    stub_s2_client.queue("match_paper_title", sample_paper_record)
+    stub_s2_client.queue("match_paper_title", {"data": [sample_paper_record]})
     stub_s2_client.queue("autocomplete_papers", sample_autocomplete_payload)
     stub_s2_client.queue(
         "batch_papers",
@@ -232,8 +232,8 @@ async def test_resolve_paper_preserves_autocomplete_order_when_batch_hydration_i
         "autocomplete_papers",
         {
             "matches": [
-                {"paperId": "p-first", "title": "First suggestion"},
-                {"paperId": "p-second", "title": "Second suggestion"},
+                {"id": "p-first", "title": "First suggestion"},
+                {"id": "p-second", "title": "Second suggestion"},
             ]
         },
     )

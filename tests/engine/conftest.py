@@ -99,8 +99,8 @@ def sample_paper_record() -> dict[str, Any]:
 def sample_autocomplete_payload() -> dict[str, Any]:
     return {
         "matches": [
-            {"paperId": "p-attn", "title": "Attention Is All You Need"},
-            {"paperId": "p-bert", "title": "BERT: Pre-training of Deep Bidirectional Transformers"},
+            {"id": "p-attn", "title": "Attention Is All You Need"},
+            {"id": "p-bert", "title": "BERT: Pre-training of Deep Bidirectional Transformers"},
         ]
     }
 
