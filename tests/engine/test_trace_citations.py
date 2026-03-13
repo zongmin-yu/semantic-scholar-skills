@@ -256,6 +256,69 @@ async def test_trace_citations_expands_second_hop_only_for_top_influential_edges
 
 
 @pytest.mark.asyncio
+async def test_trace_citations_filters_out_focal_and_first_hop_ids_and_deduplicates_second_hop(
+    monkeypatch,
+    stub_s2_client,
+    focal_resolved,
+    sample_flat_edge_payload,
+) -> None:
+    patch_resolve_paper(monkeypatch, focal_resolved)
+    stub_s2_client.queue("get_paper_references", sample_flat_edge_payload)
+    stub_s2_client.queue("get_paper_citations", {"data": []})
+    stub_s2_client.queue(
+        "get_paper_references",
+        {
+            "data": [
+                {
+                    "paperId": "p-attn",
+                    "title": "Attention Is All You Need",
+                    "year": 2017,
+                    "citationCount": 12000,
+                    "influentialCitationCount": 3500,
+                    "contexts": ["Loops back to the focal paper."],
+                    "intents": ["Background"],
+                    "isInfluential": True,
+                },
+                {
+                    "paperId": "p-ref-1",
+                    "title": "Sequence to Sequence Learning with Neural Networks",
+                    "year": 2014,
+                    "citationCount": 9000,
+                    "influentialCitationCount": 1400,
+                    "contexts": ["Loops back to the first-hop foundation."],
+                    "intents": ["Background"],
+                    "isInfluential": True,
+                },
+                {
+                    "paperId": "p-second-keep",
+                    "title": "A Second-Hop Paper to Keep",
+                    "year": 2012,
+                    "citationCount": 4000,
+                    "influentialCitationCount": 500,
+                    "contexts": ["A valid second-hop context."],
+                    "intents": ["Background"],
+                    "isInfluential": True,
+                },
+                {
+                    "paperId": "p-second-keep",
+                    "title": "A Second-Hop Paper to Keep",
+                    "year": 2012,
+                    "citationCount": 4000,
+                    "influentialCitationCount": 500,
+                    "contexts": ["A duplicate second-hop context."],
+                    "intents": ["Background"],
+                    "isInfluential": True,
+                },
+            ]
+        },
+    )
+
+    result = await trace_citations(stub_s2_client, "Attention Is All You Need", depth=2)
+
+    assert [edge.paper.paper_id for edge in result.second_hop] == ["p-second-keep"]
+
+
+@pytest.mark.asyncio
 async def test_trace_citations_rejects_invalid_depth(
     monkeypatch,
     stub_s2_client,

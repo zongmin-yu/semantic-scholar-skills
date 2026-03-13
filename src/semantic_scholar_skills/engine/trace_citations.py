@@ -162,6 +162,9 @@ async def trace_citations(
 
     second_hop: list[CitationEdge] = []
     if depth == 2:
+        first_hop_ids = {edge.paper.paper_id for edge in [*foundations, *direct_descendants]}
+        excluded_second_hop_ids = first_hop_ids | {focal.paper.paper_id}
+        seen_second_hop_ids: set[str] = set()
         second_hop_seeds = [
             edge
             for edge in [*foundations, *direct_descendants]
@@ -192,6 +195,10 @@ async def trace_citations(
         second_hop_payloads = await asyncio.gather(*(fetch_second_hop(edge) for edge in second_hop_seeds))
         for seed_edge, payload in zip(second_hop_seeds, second_hop_payloads):
             for edge in _normalize_edges(payload, direction=seed_edge.direction):
+                paper_id = edge.paper.paper_id
+                if paper_id in excluded_second_hop_ids or paper_id in seen_second_hop_ids:
+                    continue
+                seen_second_hop_ids.add(paper_id)
                 scored = _score_edges([replace(edge, depth=2)])[0]
                 second_hop.append(scored)
 
