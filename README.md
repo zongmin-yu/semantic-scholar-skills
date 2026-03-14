@@ -8,6 +8,20 @@
 
 Three research workflows built on the Semantic Scholar API — available as a Python library, Claude Code skills, or a 16-tool MCP server.
 
+## Installation
+
+### As Claude Code Plugin
+
+```bash
+claude plugin install github:zongmin-yu/semantic-scholar-skills
+```
+
+### Manual
+
+```bash
+cp -r skills/* ~/.claude/skills/
+```
+
 ## Workflows
 
 ### `/expand-references` — Discover related work from seed papers

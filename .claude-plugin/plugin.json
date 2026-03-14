@@ -1,0 +1,17 @@
+{
+  "name": "semantic-scholar",
+  "version": "0.1.0",
+  "description": "Research operators for paper triage, reference expansion, and citation tracing via Semantic Scholar API",
+  "author": {
+    "name": "zongmin-yu"
+  },
+  "homepage": "https://github.com/zongmin-yu/semantic-scholar-skills#readme",
+  "repository": "https://github.com/zongmin-yu/semantic-scholar-skills",
+  "license": "MIT",
+  "keywords": [
+    "semantic-scholar",
+    "research",
+    "citations",
+    "paper-triage"
+  ]
+}
